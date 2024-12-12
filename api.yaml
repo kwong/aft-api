@@ -1,0 +1,25 @@
+openapi: 3.0.2
+info:
+  title: api_title
+  description: api_desc
+  version: api_ver
+
+paths:
+  /create:
+    post:
+      summary: Create a new resource
+      responses:
+        '200':
+          description: The created resource
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+      x-amazon-apigateway-integration:
+        type: AWS_PROXY
+        httpMethod: POST
+        uri: "${create_invoke_arn}"
+        responses:
+          default:
+            statusCode: 200
+        passthroughBehavior: when_no_match
