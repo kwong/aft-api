@@ -42,6 +42,12 @@ resource "aws_lambda_function" "create" {
   filename         = "${path.module}/upload/request_handler.zip"
   source_code_hash = filebase64sha256("${path.module}/upload/request_handler.zip")
 
+  environment {
+    variables = {
+      MGMT_ASSUME_ROLE = "arn:aws:iam::253490781334:role/test-lambda-role"
+    }
+  }
+
   depends_on = [data.archive_file.request_handler]
 }
 
@@ -144,6 +150,46 @@ resource "aws_lambda_permission" "create_endpoint" {
   # within the API Gateway "REST API".
   source_arn = "${module.aft_api.apigateway_execution_arn}/*/*"
 }
+
+resource "aws_iam_role" "api_gateway_role" {
+  name = "aft-api-apigw-execution-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "api_gateway_ddb_access" {
+  name = "api-gateway-ddb-access-policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "dynamodb:PutItem",
+          "dynamodb:Query"
+        ]
+        Resource = module.ddb.dynamodb_table_arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "api_gateway_ddb_access" {
+  policy_arn = aws_iam_policy.api_gateway_ddb_access.arn
+  role       = aws_iam_role.api_gateway_role.name
+}
+
 
 # resource "aws_api_gateway_integration" "status" {
 #   rest_api_id             = module.aft_api.apigateway_api_id

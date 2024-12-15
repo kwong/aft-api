@@ -3,8 +3,12 @@ import json
 import logging
 import uuid
 from datetime import datetime, timezone
+import os
 
 from boto3.session import Session
+
+MGMT_ASSUME_ROLE = os.environ["MGMT_ASSUME_ROLE"]
+
 
 
 logger = logging.getLogger()
@@ -37,7 +41,8 @@ def handler(event, context):
     request_id = ""
 
     try:
-        organizations = assume_role("arn:aws:iam::253490781334:role/test-lambda-role", "Organization_Session")
+        #organizations = assume_role("arn:aws:iam::253490781334:role/test-lambda-role", "Organization_Session")
+        organizations = assume_role(MGMT_ASSUME_ROLE, "Organization_Session")
         paginator = organizations.get_paginator('list_accounts')
         for page in paginator.paginate():
             for account in page['Accounts']:
