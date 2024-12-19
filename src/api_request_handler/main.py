@@ -37,7 +37,7 @@ def assume_role(assume_role_arn, role_session_name):
 def handler(event, context):
     logger.info(f"Received event: {json.dumps(event)}")
     body = event['body']
-    account_email = body.get('accountEmail')
+    account_email = json.loads(body).get('accountEmail')
     request_id = ""
 
     try:
