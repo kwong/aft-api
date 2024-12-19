@@ -23,3 +23,49 @@ paths:
           default:
             statusCode: 200
         passthroughBehavior: when_no_match
+  /test/{requestId}:
+    get:
+      summary: Get request status by ID
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Request status retrieved successfully
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+      x-amazon-apigateway-integration:
+        type: AWS
+        uri: arn:aws:apigateway:ap-southeast-1:dynamodb:action/Query
+        credentials: arn:aws:iam::941377143985:role/aft-api-apigw-execution-role
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            {
+              "TableName": "aft-api-metadata",
+              "KeyConditionExpression": "id = :requestId",
+              "ExpressionAttributeValues": {
+                ":requestId": {
+                  "S": "$input.params('requestId')"
+                }
+              }
+            }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set($inputRoot = $input.path('$'))
+                {
+                        #foreach($elem in $inputRoot.Items) {
+                            "requestId": "$elem.id.S",
+                            "status": "$elem.status.S"
+                        }#if($foreach.hasNext),#end
+                	#end
+                }
+        passthroughBehavior: when_no_templates
