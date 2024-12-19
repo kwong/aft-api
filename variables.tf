@@ -2,7 +2,7 @@
 variable "app_name" {
   description = "Name of the REST API"
   type        = string
-  default     = "aft-api"
+  default     = "aft-rest-api"
 }
 variable "region" {
   description = "AWS Region"

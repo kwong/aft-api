@@ -9,9 +9,9 @@ module "aft_api" {
 
   openapi_config = templatefile(("api.yaml"), {
     create_invoke_arn = "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/${aws_lambda_function.create.arn}/invocations" #aws_lambda_function.create.arn,
-    api_title        = "AFT API",
-    api_desc         = "AFT API",
-    api_ver          = "1.0.0",
+    api_title         = "AFT API",
+    api_desc          = "AFT API",
+    api_ver           = "1.0.0",
     }
   )
 }
@@ -39,16 +39,14 @@ resource "aws_lambda_function" "create" {
   architectures = ["arm64"]
   timeout       = "900"
 
-  filename         = "${path.module}/upload/request_handler.zip"
-  source_code_hash = filebase64sha256("${path.module}/upload/request_handler.zip")
+  filename         = data.archive_file.request_handler.output_path
+  source_code_hash = data.archive_file.request_handler.output_base64sha256
 
   environment {
     variables = {
       MGMT_ASSUME_ROLE = "arn:aws:iam::253490781334:role/test-lambda-role"
     }
   }
-
-  depends_on = [data.archive_file.request_handler]
 }
 
 ## IAM role for Lambda (as defined in previous example)
@@ -174,8 +172,8 @@ resource "aws_iam_policy" "api_gateway_ddb_access" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "dynamodb:PutItem",
           "dynamodb:Query"
         ]
